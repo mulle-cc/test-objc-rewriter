@@ -5,19 +5,31 @@
 
 @implementation Foo
 
-+ (id) new          { return( (Foo *) mulle_objc_infraclass_alloc_instance( (struct _mulle_objc_infraclass *) self)); }
-- (void) dealloc    { _mulle_objc_instance_free( self); }
++ (id) new
+{
+   return( (Foo *) mulle_objc_infraclass_alloc_instance( (struct _mulle_objc_infraclass *) self));
+}
 
-// ivar access via self
+- (void) dealloc
+{
+   _mulle_objc_instance_free( self);
+}
+
 - (int) test
 {
-   id x = [Foo new];          // class message send
-   id y = (id) 0;             // cast
-   if ([x isEqual:y])         // bool result from message
-      return 1;
-   return 0;
+   id   x;
+   id   y;
+
+   x = [Foo new];
+   y = (id) 0;
+   if( [x isEqual:y])
+      return( 1);
+   return( 0);
 }
 
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

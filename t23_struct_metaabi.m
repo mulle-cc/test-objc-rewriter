@@ -10,17 +10,26 @@ typedef struct { double a, b, c, d, e, f; } BigStruct;
 @end
 
 @implementation Calc
+
 - (BigStruct) transform:(BigStruct) s
 {
-    s.a += 1.0;
-    return s;
+   s.a += 1.0;
+   return( s);
 }
+
 @end
 
-void test(Calc *c) {
-    BigStruct in  = { 1, 2, 3, 4, 5, 6 };
-    BigStruct out = [c transform:in];
-    mulle_printf( "out.a: %g\n", out.a);
+void test( Calc *c)
+{
+   BigStruct   in;
+   BigStruct   out;
+
+   in  = (BigStruct) { 1, 2, 3, 4, 5, 6 };
+   out = [c transform:in];
+   mulle_printf( "out.a: %g\n", out.a);
 }
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

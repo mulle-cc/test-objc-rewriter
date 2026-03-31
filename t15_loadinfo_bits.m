@@ -8,7 +8,15 @@
 @end
 
 @implementation Bits
-- (void) noop { mulle_printf( "noop\n"); }
+
+- (void) noop
+{
+   mulle_printf( "noop\n");
+}
+
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

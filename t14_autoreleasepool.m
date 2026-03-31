@@ -5,9 +5,19 @@
 
 @interface Base
 @end
+
 @implementation Base
-+ (id) new          { return( (Base *) mulle_objc_infraclass_alloc_instance( (struct _mulle_objc_infraclass *) self)); }
-- (void) dealloc    { _mulle_objc_instance_free( self); }
+
++ (id) new
+{
+   return( (Base *) mulle_objc_infraclass_alloc_instance( (struct _mulle_objc_infraclass *) self));
+}
+
+- (void) dealloc
+{
+   _mulle_objc_instance_free( self);
+}
+
 @end
 
 @interface Foo : Base
@@ -20,23 +30,31 @@
 
 - (void) autorel
 {
-   @autoreleasepool {
-      id x = [Foo new];
+   @autoreleasepool
+   {
+      id   x;
+
+      x = [Foo new];
       (void) x;
    }
 }
 
 - (void) qualifiers
 {
-   __unsafe_unretained id x = [Foo new];
+   __unsafe_unretained id   x;
+
+   x = [Foo new];
    (void) x;
 }
 
 + (id) create
 {
-   return [self new];
+   return( [self new]);
 }
 
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

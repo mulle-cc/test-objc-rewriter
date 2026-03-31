@@ -6,7 +6,12 @@
 @end
 
 @protocolimplementation Printable
-- (void) print { mulle_printf( "print\n"); }
+
+- (void) print
+{
+   mulle_printf( "print\n");
+}
+
 @end
 
 @interface Widget <Printable>
@@ -15,4 +20,7 @@
 @implementation Widget
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

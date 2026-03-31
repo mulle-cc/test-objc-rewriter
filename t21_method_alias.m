@@ -7,8 +7,17 @@
 @end
 
 @implementation Aliased
-- (void) doWork { mulle_printf( "doWork\n"); }
+
+- (void) doWork
+{
+   mulle_printf( "doWork\n");
+}
+
 @method_implementation - work = - doWork;
+
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

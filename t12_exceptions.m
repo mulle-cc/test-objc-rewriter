@@ -7,15 +7,19 @@
 @end
 
 @implementation Foo
+
 - (void) test:(id) obj
 {
-   @try {
+   @try
+   {
       [obj print];
    }
-   @catch (NSException *e) {
+   @catch (NSException *e)
+   {
       [e handle];
    }
-   @finally {
+   @finally
+   {
       [obj cleanup];
    }
 }
@@ -24,6 +28,10 @@
 {
    @throw obj;
 }
+
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

@@ -6,7 +6,13 @@
 typedef unsigned long NSUInteger;
 #endif
 #ifndef NSFastEnumerationState
-typedef struct { NSUInteger state; void **itemsPtr; NSUInteger *mutationsPtr; NSUInteger extra[5]; } NSFastEnumerationState;
+typedef struct
+{
+   NSUInteger   state;
+   void         **itemsPtr;
+   NSUInteger   *mutationsPtr;
+   NSUInteger   extra[5];
+} NSFastEnumerationState;
 #endif
 
 @interface Collection
@@ -16,21 +22,29 @@ typedef struct { NSUInteger state; void **itemsPtr; NSUInteger *mutationsPtr; NS
 @end
 
 @implementation Collection
+
 - (NSUInteger) countByEnumeratingWithState:(NSFastEnumerationState *) state
                                    objects:(id *) buf
                                      count:(NSUInteger) len
 {
-    (void) state; (void) buf; (void) len;
-    return 0;
+   (void) state;
+   (void) buf;
+   (void) len;
+   return( 0);
 }
+
 @end
 
-void test(Collection *c) {
-    id item;
-    for (item in c) {
-        mulle_printf( "item: %p\n", item);
-    }
-    mulle_printf( "done\n");
+void test( Collection *c)
+{
+   id   item;
+
+   for( item in c)
+      mulle_printf( "item: %p\n", item);
+   mulle_printf( "done\n");
 }
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

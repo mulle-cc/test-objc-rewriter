@@ -8,15 +8,35 @@
 @compatibility_alias Creature Animal;
 
 @implementation Animal
-+ (id) new          { return( (Animal *) mulle_objc_infraclass_alloc_instance( (struct _mulle_objc_infraclass *) self)); }
-- (void) dealloc    { _mulle_objc_instance_free( self); }
-- (void) breathe { mulle_printf( "breathe\n"); }
-@end
 
-void test(void) {
-    Creature *c = (Creature *) [Animal new];
-    [c breathe];
-    (void) c;
++ (id) new
+{
+   return( (Animal *) mulle_objc_infraclass_alloc_instance( (struct _mulle_objc_infraclass *) self));
 }
 
-int main( void) { test(); return 0; }
+- (void) dealloc
+{
+   _mulle_objc_instance_free( self);
+}
+
+- (void) breathe
+{
+   mulle_printf( "breathe\n");
+}
+
+@end
+
+void test( void)
+{
+   Creature   *c;
+
+   c = (Creature *) [Animal new];
+   [c breathe];
+   (void) c;
+}
+
+int main( void)
+{
+   test();
+   return( 0);
+}

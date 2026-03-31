@@ -1,7 +1,9 @@
 #include <mulle-objc-runtime/mulle-objc-runtime.h>
 
 @interface Foo
-{ int x; }
+{
+   int   x;
+}
 - (int) x;
 @end
 
@@ -10,7 +12,16 @@
 @end
 
 @implementation Foo (MyCategory)
-- (int) doubled { mulle_printf( "doubled: %d\n", self->x * 2); return self->x * 2; }
+
+- (int) doubled
+{
+   mulle_printf( "doubled: %d\n", self->x * 2);
+   return( self->x * 2);
+}
+
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

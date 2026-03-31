@@ -3,19 +3,30 @@
 
 @interface Node
 {
-    int   value;
-    void *next;
+   int     value;
+   void    *next;
 }
 - (int) value;
 @end
 
 @implementation Node
-- (int) value { return value; }
-@end
 
-void test(Node *n) {
-    struct NodeRaw { @defs(Node) } *raw = (struct NodeRaw *) n;
-    mulle_printf( "value: %d\n", raw->value);
+- (int) value
+{
+   return( value);
 }
 
-int main( void) { return 0; }
+@end
+
+void test( Node *n)
+{
+   struct NodeRaw { @defs(Node) } *raw;
+
+   raw = (struct NodeRaw *) n;
+   mulle_printf( "value: %d\n", raw->value);
+}
+
+int main( void)
+{
+   return( 0);
+}

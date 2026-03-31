@@ -7,7 +7,14 @@
 @end
 
 @implementation Foo
-- (int) value { mulle_printf( "value\n"); return 42; }
+- (int) value
+{
+   mulle_printf( "value\n");
+   return( 42);
+}
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}

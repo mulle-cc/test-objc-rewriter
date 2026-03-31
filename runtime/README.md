@@ -36,3 +36,11 @@ cmake -B build \
 cmake --build build --config Release &&
 cmake --install build --config Release
 ```
+
+## Author
+
+Mulle kybernetiK
+nat@mulle-kybernetik.com
+https://github.com/mulle-cc
+
+![footer](https://raw.githubusercontent.com/mulle-cc/test-objc-rewriter/master/heartlessly-vibecoded.png)

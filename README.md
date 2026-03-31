@@ -1,6 +1,7 @@
 # test-c-output — Rewriter Test Suite
 
-Tests for the `--mulle-objc-emit-c` compiler flag. Each `.m` file survives two passes:
+Tests for the `--mulle-objc-emit-c` compiler flag of the [mulle-clang](//github.com/mulle-cc/mulle-clang-project) compiler.
+Each `.m` file survives two passes:
 
 1. **Rewrite**: `clang --mulle-objc-emit-c foo.m -o foo.c`
 2. **Compile**: `clang -x c -c foo.c -o foo.o`
@@ -140,3 +141,12 @@ cd /path/to/mulle-clang-21.1.8/build && ninja clang
 ```
 
 Rewriter source: `mulle-clang-project/clang/lib/Frontend/Rewrite/RewriteMulleObjC.cpp`
+
+
+## Author
+
+Nat! for Mulle kybernetiK
+nat@mulle-kybernetik.com
+https://github.com/mulle-cc
+
+![footer](https://raw.githubusercontent.com/mulle-cc/test-objc-rewriter/master/heartlessly-vibecoded.png)

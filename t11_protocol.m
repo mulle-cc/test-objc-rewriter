@@ -5,11 +5,21 @@
 @end
 
 @interface Foo <Printable>
-{ int x; }
+{
+   int   x;
+}
 @end
 
 @implementation Foo
-- (void) print { mulle_printf( "print\n"); }
+
+- (void) print
+{
+   mulle_printf( "print\n");
+}
+
 @end
 
-int main( void) { return 0; }
+int main( void)
+{
+   return( 0);
+}
