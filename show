@@ -1,0 +1,4 @@
+#!/bin/sh
+CLANG="${CLANG:-/home/src/srcL/mulle-clang-21.1.8/build/bin/clang}"
+INC="${INC:-$(cd "$(dirname "$0")/runtime" && mulle-sde dependency-dir 2>/dev/null)/include}"
+exec "$CLANG" --mulle-objc-emit-c -isystem "$INC" "$@"
