@@ -1,10 +1,11 @@
 #!/bin/sh
-# Regression test for --mulle-objc-emit-deps sidecar file generation.
+# run-emit-deps — regression test for --mulle-objc-emit-deps sidecar file generation.
 # Tests both --mulle-objc-emit-deps=<dir> and bare --mulle-objc-emit-deps.
 #
-# Usage: CLANG=/path/to/clang sh test_emit_deps.sh
+# Usage: sh run-emit-deps
+#        (also accepts MULLE_CLANG= as set by run-test)
 #
-CLANG="${CLANG:-clang}"
+CLANG="${CLANG:-${MULLE_CLANG:-clang}}"
 INC="${INC:-$(cd "$(dirname "$0")/runtime" && mulle-sde dependency-dir 2>/dev/null)/include}"
 TESTDIR="$(cd "$(dirname "$0")" && pwd)"
 

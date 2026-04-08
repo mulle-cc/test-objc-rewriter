@@ -1,0 +1,110 @@
+#!/bin/sh
+# run-test — rewriter test suite
+#
+# Rewrites every t*.m with mulle-clang, compiles the output with mulle-clang
+# and every C compiler found on PATH (gcc, clang, tcc, kefir, filc), then
+# runs the emit-deps regression tests (test_emit_deps.sh).
+#
+# Usage:
+#   ./run-test                   # rewrite + portability + emit-deps
+#   ./run-test --mulle-only      # rewrite + mulle-clang compile only (skip portability + emit-deps)
+#   ./run-test --skip-emit-deps  # rewrite + portability, skip emit-deps
+#
+# Environment overrides:
+#   MULLE_CLANG=<path>      mulle-clang binary (default: sibling build/)
+#   CC=<compiler>           test portability against this one compiler only
+#   INC=<path>              include dir (default: runtime/ dep dir)
+
+MULLE_CLANG="${MULLE_CLANG:-$(cd "$(dirname "$0")/.." && pwd)/build/bin/clang}"
+INC="${INC:-$(cd "$(dirname "$0")/runtime" && mulle-sde dependency-dir 2>/dev/null)/include}"
+TESTDIR="$(cd "$(dirname "$0")" && pwd)"
+
+MULLE_ONLY=0
+SKIP_EMIT_DEPS=0
+while [ $# -gt 0 ]; do
+   case "$1" in
+      --mulle-only)      MULLE_ONLY=1 ;;
+      --skip-emit-deps)  SKIP_EMIT_DEPS=1 ;;
+      *) echo "Unknown option: $1"; exit 1 ;;
+   esac
+   shift
+done
+
+if [ "$MULLE_ONLY" -eq 1 ]; then
+   COMPILERS=""
+   SKIP_EMIT_DEPS=1
+elif [ -n "$CC" ]; then
+   COMPILERS="$CC"
+else
+   COMPILERS=""
+   for cc in gcc clang tcc kefir filc; do
+      which "$cc" >/dev/null 2>&1 && COMPILERS="$COMPILERS $cc"
+   done
+fi
+
+PASS=0
+FAIL=0
+
+for f in "$TESTDIR"/t*.m; do
+   name=$(basename "$f" .m)
+
+   # --- rewrite phase (always with mulle-clang) ---
+   err=$("$MULLE_CLANG" --mulle-objc-emit-c -isystem "$INC" \
+         "$f" -o "/tmp/${name}.c" 2>&1)
+   if [ $? -ne 0 ]; then
+      echo "REWRITE FAIL $name: $(echo "$err" | grep -m1 'error:')"
+      FAIL=$((FAIL+1))
+      continue
+   fi
+
+   # --- compile phase: mulle-clang first ---
+   err=$("$MULLE_CLANG" -x c -c "/tmp/${name}.c" -isystem "$INC" \
+         -o "/tmp/${name}_mulle.o" 2>&1)
+   if [ $? -ne 0 ]; then
+      echo "COMPILE FAIL [mulle-clang] $name: $(echo "$err" | grep -m1 'error:')"
+      FAIL=$((FAIL+1))
+      continue
+   fi
+   echo "OK   [mulle-clang] $name"
+   PASS=$((PASS+1))
+
+   # --- portability: rewrite no-asm variant once per file ---
+   if [ -n "$COMPILERS" ]; then
+      "$MULLE_CLANG" --mulle-objc-emit-c --mulle-objc-no-asm-names \
+         -isystem "$INC" "$f" -o "/tmp/${name}_noasm.c" 2>/dev/null
+   fi
+
+   for cc in $COMPILERS; do
+      if echo "$cc" | grep -q "clang"; then
+         src="/tmp/${name}.c"
+         extra="-fmacro-backtrace-limit=0"
+      else
+         src="/tmp/${name}_noasm.c"
+         extra=""
+      fi
+      [ -f "$src" ] || continue
+
+      err=$($cc -x c -c "$src" $extra -isystem "$INC" -o "/tmp/${name}_${cc}.o" 2>&1)
+      if [ $? -ne 0 ]; then
+         first=$(echo "$err" | grep -m1 -i 'error' | sed 's|.*[Ee]rror: ||')
+         echo "FAIL [$cc] $name: $first"
+         FAIL=$((FAIL+1))
+      else
+         echo "OK   [$cc] $name"
+         PASS=$((PASS+1))
+      fi
+   done
+done
+
+echo ""
+echo "Results: $PASS passed, $FAIL failed"
+OVERALL_FAIL=$FAIL
+
+# --- emit-deps regression ---
+if [ "$SKIP_EMIT_DEPS" -eq 0 ]; then
+   echo ""
+   MULLE_CLANG="$MULLE_CLANG" INC="$INC" sh "$TESTDIR/run-emit-deps"
+   [ $? -ne 0 ] && OVERALL_FAIL=$((OVERALL_FAIL+1))
+fi
+
+[ $OVERALL_FAIL -eq 0 ]

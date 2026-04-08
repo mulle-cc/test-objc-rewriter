@@ -14,16 +14,12 @@ Tests that have a `main` can also be run directly with the `run` script.
 
 The `runtime/` subfolder is a minimal mulle-sde project that builds
 `mulle-objc-runtime` and its dependencies as a self-contained local cache.
-It is C-only and compiles quickly. Do this once (or after runtime updates):
+Do this once (or after runtime updates):
 
 ```sh
 cd test-c-output/runtime
 mulle-sde craft
 ```
-
-This populates `~/.mulle/var/cache/sde/runtime-<hash>/dependency/Debug/`.
-The `show`, `run`, and test loop scripts all resolve the path automatically
-via `mulle-sde dependency-dir`.
 
 ---
 
@@ -39,60 +35,37 @@ via `mulle-sde dependency-dir`.
 Runs `clang --mulle-objc-emit-c` with the correct `-isystem` path and prints
 the C output. Useful for inspecting what the rewriter produces.
 
-### `run` — compile and run a test directly
+### `run` — compile and run a single test
 
 ```sh
 ./run test.m
 ```
 
-Compiles the `.m` file with `-fobjc-runtime=mulle -fobjc-tao`, links against
+Compiles a `.m` file with `-fobjc-runtime=mulle -fobjc-tao`, links against
 the local runtime, and runs the resulting binary. Requires the test to have
-a `main` function. Tests that allocate objects need `+new`/`-dealloc` — see
-existing tests for the pattern:
+a `main` function.
 
-```objc
-+ (id) new       { return (Foo *) mulle_objc_infraclass_alloc_instance(
-                       (struct _mulle_objc_infraclass *) self); }
-- (void) dealloc { _mulle_objc_instance_free( self); }
-```
-
-Both scripts respect `CLANG=` and `DEPDIR=` environment overrides.
-
----
-
-## Running the rewriter test suite
+### `run-test` — full test suite
 
 ```sh
-CLANG=/path/to/mulle-clang-21.1.8/build/bin/clang
-INC=$(cd runtime && mulle-sde dependency-dir)/include
-
-for f in t*.m; do
-  name=$(basename $f .m)
-  $CLANG --mulle-objc-emit-c -isystem "$INC" "$f" -o /tmp/${name}.c 2>/dev/null || \
-    { echo "REWRITE FAIL $name"; continue; }
-  out=$($CLANG -x c -c /tmp/${name}.c -isystem "$INC" -o /tmp/${name}.o 2>&1)
-  [ $? -ne 0 ] \
-    && echo "COMPILE FAIL $name: $(echo "$out" | grep 'error:' | head -1)" \
-    || echo "OK $name"
-done
+./run-test                   # rewrite + portability + emit-deps
+./run-test --mulle-only      # rewrite + mulle-clang compile only
+./run-test --skip-emit-deps  # rewrite + portability, skip emit-deps
 ```
 
-Expected: `OK t01_pure_c` through `OK t30_emit_deps` (30 tests).
+Rewrites every `t*.m` with mulle-clang, compiles with mulle-clang and every
+C compiler found on `PATH` (gcc, clang, tcc, kefir, filc), then runs the
+`test_emit_deps.sh` regression. One command tests everything.
 
-### `--mulle-objc-emit-deps` tests
+Environment overrides: `MULLE_CLANG=`, `CC=` (single compiler), `INC=`.
 
-```sh
-CLANG=/path/to/clang INC=... sh test_emit_deps.sh
-```
+### `run-emit-deps` — emit-deps regression (called by `run-test`)
 
 Verifies the `--mulle-objc-emit-deps[=<dir>]` flag that writes a `.deps.inc`
-sidecar listing all `@implementation` blocks. Expected:
+sidecar listing all `@implementation` blocks. Can also be run standalone:
 
-```
-OK t30-explicit-dir
-OK t30-bare-flag
-OK t30-with-rewriter
-Results: 3 passed, 0 failed
+```sh
+sh run-emit-deps
 ```
 
 ---
@@ -134,10 +107,19 @@ Results: 3 passed, 0 failed
 
 ---
 
+## Compiler compatibility
+
+The rewritten C targets gcc and clang. All `__asm__` symbol names are
+quoted (`__asm__("\"name\"")`) so GNU as accepts ObjC-style names like
+`-[Foo value]` which contain `-`, `[`, `]`. Non-clang compilers receive
+a `--mulle-objc-no-asm-names` variant without those annotations.
+
+---
+
 ## Rebuilding the compiler
 
 ```sh
-cd /path/to/mulle-clang-21.1.8/build && ninja clang
+cd /path/to/mulle-clang-22.1.2/build && ninja clang
 ```
 
 Rewriter source: `mulle-clang-project/clang/lib/Frontend/Rewrite/RewriteMulleObjC.cpp`

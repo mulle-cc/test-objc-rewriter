@@ -1,4 +1,30 @@
 #!/bin/sh
-CLANG="${CLANG:-/home/src/srcL/mulle-clang-21.1.8/build/bin/clang}"
+# show — emit rewritten C to stdout
+#
+# Usage: ./show [options] test.m
+#
+# Options:
+#   --portable    Use --mulle-objc-portable-call (arch-independent macro calls)
+#   --no-offsets  Use -fobjc-encode-no-offsets (strip byte offsets from signatures)
+#   --no-asm      Use --mulle-objc-no-asm-names (suppress __asm__ aliases)
+#   --            Pass remaining args directly to clang
+#
+# Environment:
+#   CLANG         Path to mulle-clang binary
+#   INC           Path to mulle-objc-runtime include dir
+
+CLANG="${CLANG:-/home/src/srcL/mulle-clang-22.1.2/build/bin/clang}"
 INC="${INC:-$(cd "$(dirname "$0")/runtime" && mulle-sde dependency-dir 2>/dev/null)/include}"
-exec "$CLANG" --mulle-objc-emit-c -isystem "$INC" "$@"
+
+EXTRA=""
+while [ $# -gt 0 ]; do
+   case "$1" in
+      --portable)   EXTRA="$EXTRA --mulle-objc-portable-call"; shift ;;
+      --no-offsets) EXTRA="$EXTRA -fobjc-encode-no-offsets";   shift ;;
+      --no-asm)     EXTRA="$EXTRA --mulle-objc-no-asm-names";  shift ;;
+      --)           shift; break ;;
+      *)            break ;;
+   esac
+done
+
+exec "$CLANG" --mulle-objc-emit-c -isystem "$INC" $EXTRA "$@"

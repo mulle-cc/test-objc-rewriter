@@ -1,23 +1,65 @@
 #!/bin/sh
-# Compile and run an ObjC test file directly.
-# Usage: ./run test.m [args...]
-CLANG="${CLANG:-/home/src/srcL/mulle-clang-21.1.8/build/bin/clang}"
+# run — compile and run an ObjC test file directly
+#
+# Usage: ./run [options] test.m [args...]
+#
+# Options:
+#   --portable    Compile via rewriter first (--mulle-objc-portable-call), then C compiler
+#   --no-offsets  Add -fobjc-encode-no-offsets when compiling
+#   -O<n>         Optimization level (default: -O0)
+#   --            Pass remaining args to the executable
+#
+# Environment:
+#   CLANG         Path to mulle-clang binary
+#   DEPDIR        Path to dependency dir (default: runtime/ subproject)
+
+CLANG="${CLANG:-/home/src/srcL/mulle-clang-22.1.2/build/bin/clang}"
 DEPDIR="${DEPDIR:-$(cd "$(dirname "$0")/runtime" && mulle-sde dependency-dir 2>/dev/null)}"
 INC="$DEPDIR/include"
 LIB="$DEPDIR/lib"
 
+OPT="-O0"
+PORTABLE=""
+EXTRA_CFLAGS=""
+
+while [ $# -gt 0 ]; do
+   case "$1" in
+      --portable)   PORTABLE=1; shift ;;
+      --no-offsets) EXTRA_CFLAGS="$EXTRA_CFLAGS -fobjc-encode-no-offsets"; shift ;;
+      -O*)          OPT="$1"; shift ;;
+      --)           shift; break ;;
+      -*)           break ;;
+      *)            break ;;
+   esac
+done
+
 SRC="$1"; shift
 EXE="/tmp/$(basename "$SRC" .m).exe"
 
-"$CLANG" -O0 -g -fobjc-runtime=mulle -fobjc-tao \
-  -o "$EXE" "$SRC" \
-  -isystem "$INC" -L"$LIB" \
-  -lmulle-objc-runtime -lmulle-core \
-  -Wl,--export-dynamic \
-  -Wl,--whole-archive -Wl,--no-as-needed -lmulle-core-all-load -Wl,--as-needed -Wl,--no-whole-archive \
-  -Wl,--whole-archive -Wl,--no-as-needed -lmulle-objc-runtime-startup -Wl,--as-needed -Wl,--no-whole-archive \
-  -Wl,--export-dynamic -lpthread -ldl \
-  -Wl,--whole-archive -Wl,--no-as-needed -lbacktrace -Wl,--as-needed -Wl,--no-whole-archive \
-  -Wl,-rpath="$LIB" || exit 1
+if [ -n "$PORTABLE" ]; then
+   # Rewrite to C first, then compile with system C compiler
+   CSRC="/tmp/$(basename "$SRC" .m)_portable.c"
+   "$CLANG" --mulle-objc-emit-c --mulle-objc-no-asm-names $EXTRA_CFLAGS \
+      -isystem "$INC" "$SRC" -o "$CSRC" 2>&1 || exit 1
+   cc -x c "$OPT" -o "$EXE" "$CSRC" -isystem "$INC" -L"$LIB" \
+      -lmulle-objc-runtime -lmulle-core \
+      -Wl,--export-dynamic \
+      -Wl,--whole-archive -Wl,--no-as-needed -lmulle-core-all-load -Wl,--as-needed -Wl,--no-whole-archive \
+      -Wl,--whole-archive -Wl,--no-as-needed -lmulle-objc-runtime-startup -Wl,--as-needed -Wl,--no-whole-archive \
+      -Wl,--export-dynamic -lpthread -ldl \
+      -Wl,--whole-archive -Wl,--no-as-needed -lbacktrace -Wl,--as-needed -Wl,--no-whole-archive \
+      -Wl,-rpath="$LIB" || exit 1
+else
+   "$CLANG" "$OPT" -g -fobjc-runtime=mulle -fobjc-tao $EXTRA_CFLAGS \
+      -o "$EXE" "$SRC" \
+      -isystem "$INC" -L"$LIB" \
+      -lmulle-objc-runtime -lmulle-core \
+      -Wl,--export-dynamic \
+      -Wl,--whole-archive -Wl,--no-as-needed -lmulle-core-all-load -Wl,--as-needed -Wl,--no-whole-archive \
+      -Wl,--whole-archive -Wl,--no-as-needed -lmulle-objc-runtime-startup -Wl,--as-needed -Wl,--no-whole-archive \
+      -Wl,--export-dynamic -lpthread -ldl \
+      -Wl,--whole-archive -Wl,--no-as-needed -lbacktrace -Wl,--as-needed -Wl,--no-whole-archive \
+      -Wl,-rpath="$LIB" || exit 1
+fi
 
 exec "$EXE" "$@"
